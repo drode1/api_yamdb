@@ -1,10 +1,13 @@
 from rest_framework import permissions
 
-# Получаю admin из кастомной модели User
-admin = ''
-
 
 class IsAdminOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        return (admin == request.user
+        return (request.user.is_superuser or request.user.role == 'admin'
                 or request.method in permissions.SAFE_METHODS)
+
+
+class IsCustomAdminUser(permissions.IsAuthenticated):
+    def has_permission(self, request, view):
+        return request.user.is_superuser or request.user.role == 'admin'
+
