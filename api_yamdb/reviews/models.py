@@ -40,7 +40,7 @@ class Title(models.Model):
         null=True,
         verbose_name='Категория'
     )
-    genres = models.ManyToManyField(
+    genre = models.ManyToManyField(
         Genre,
         through='GenreTitle',
         verbose_name='Жанры'
@@ -52,7 +52,7 @@ class Title(models.Model):
         verbose_name_plural = "Произведения"
 
     def get_genres(self):
-        return ', '.join([obj for obj in self.genres.all()])
+        return ', '.join([obj for obj in self.genre.all()])
 
     def __str__(self):
         return self.name

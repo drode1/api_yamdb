@@ -4,13 +4,12 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from permissions import IsCustomAdminUser
 from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .permissions import IsAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly, IsCustomAdminUser
 from .serializers import (
     CategorySerializer, GenreSerializer, ObtainUserTokenSerializer,
     TitleSerializer, UserRegisterSerializer, UserSerializer)
@@ -32,6 +31,7 @@ class CategoryViewSet(CreateListDestroyViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    lookup_field = 'slug'
 
 
 class GenreViewSet(CreateListDestroyViewSet):
@@ -40,6 +40,7 @@ class GenreViewSet(CreateListDestroyViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):

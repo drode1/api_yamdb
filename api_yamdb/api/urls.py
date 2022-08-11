@@ -19,8 +19,8 @@ v1_urlpatterns = (
         path('auth/signup/', RegisterUser.as_view(), name='user-signup'),
         path('auth/token/', ObtainUserToken.as_view(), name='user-token'),
         path('redoc/', TemplateView.as_view(template_name='redoc.html'),
-             name='redoc'
-             ),
+             name='redoc'),
+        # path('', include('djoser.urls.jwt')),
         path('', include(router_v1.urls)),
 
     ],
@@ -30,4 +30,3 @@ v1_urlpatterns = (
 urlpatterns = [
     path('v1/', include(v1_urlpatterns)),
 ]
-
