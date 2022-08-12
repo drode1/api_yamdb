@@ -9,14 +9,16 @@ from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from .filters import TitleFilter
 from reviews.models import Category, Genre, Review, Title
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import (IsAuthenticatedOrReadOnly)
 from .permissions import IsAdminOrReadOnly, IsCustomAdminUser
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ObtainUserTokenSerializer,
-                          ReviewSerializer, TitleSerializer,
+                          ReviewSerializer, ReadTitleSerializer,
+                          CreateTitleSerializer,
                           UserRegisterSerializer, UserSerializer)
+
 
 User = get_user_model()
 
@@ -48,10 +50,16 @@ class GenreViewSet(CreateListDestroyViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category', 'genre', 'name', 'year')
+    filterset_class = TitleFilter
+    # filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ReadTitleSerializer
+        else:
+            return CreateTitleSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -114,11 +122,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
 
     def get_queryset(self):
-        title = Title.objects.get(pk=self.kwargs.get('title_id'))
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         return title.reviews.all()
 
     def perform_create(self, serializer):
-        title = Title.objects.get(pk=self.kwargs.get('title_id'))
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user, title=title)
 
     def perform_update(self, serializer):
@@ -138,15 +146,27 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
 
     def get_queryset(self):
-        review = Review.objects.get(
+        review = get_object_or_404(
+            Review,
             pk=self.kwargs.get('review_id'),
             title__pk=self.kwargs.get('title_id')
         )
         return review.comments.all()
 
     def perform_create(self, serializer):
-        review = Review.objects.get(
-            pk=self.kwargs.get('review_id'),
-            title__pk=self.kwargs.get('title_id')
+        review2 = get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id')
         )
-        serializer.save(author=self.request.user, review=review)
+        serializer.save(author=self.request.user, review=review2)
+
+    def perform_update(self, serializer):
+        if serializer.instance.author != self.request.user:
+            raise PermissionDenied('Изменить не свой отзыв нельзя')
+        super(CommentViewSet, self).perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        if not (instance.author == self.request.user
+                or self.request.user.role == 'moderator'):
+            raise PermissionDenied('Удалить чужой отзыв нельзя')
+        super(CommentViewSet, self).perform_destroy(instance)
