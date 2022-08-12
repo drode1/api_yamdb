@@ -4,7 +4,6 @@ from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueValidator
 from reviews.models import Category, Comment, Genre, Review, Title
 
-
 User = get_user_model()
 
 
@@ -47,10 +46,21 @@ class CreateTitleSerializer(serializers.ModelSerializer):
 class ReadTitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         fields = '__all__'
         model = Title
+
+    def get_rating(self, obj):
+        scores_for_title = (
+            title.score for title
+            in Review.objects.filter(title_id=obj.id)
+        )
+        if scores_for_title:
+            return (sum(scores_for_title)
+                    / Review.objects.filter(title_id=obj.id).count())
+        return None
 
 
 class UserSerializer(serializers.ModelSerializer):
