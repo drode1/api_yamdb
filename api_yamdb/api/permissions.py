@@ -13,7 +13,6 @@ class IsAdminOrReadOnly(permissions.BasePermission):
             return (request.method in permissions.SAFE_METHODS
                     or request.user.role == 'admin')
         return request.method in permissions.SAFE_METHODS
-    # pass
 
 
 class IsCustomAdminUser(permissions.IsAuthenticated):

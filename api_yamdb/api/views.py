@@ -8,12 +8,14 @@ from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from reviews.models import Category, Genre, Title
 
 from .permissions import IsAdminOrReadOnly, IsCustomAdminUser
 from .serializers import (
-    CategorySerializer, GenreSerializer, ObtainUserTokenSerializer,
-    TitleSerializer, UserRegisterSerializer, UserSerializer)
-from reviews.models import Category, Genre, Title
+    CategorySerializer, CreateTitleSerializer, GenreSerializer,
+    ObtainUserTokenSerializer, ReadTitleSerializer, UserRegisterSerializer,
+    UserSerializer)
+from .filters import TitleFilter
 
 User = get_user_model()
 
@@ -45,10 +47,16 @@ class GenreViewSet(CreateListDestroyViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category', 'genre', 'name', 'year')
+    filterset_class = TitleFilter
+    # filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ReadTitleSerializer
+        else:
+            return CreateTitleSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
