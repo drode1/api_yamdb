@@ -4,6 +4,7 @@ from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueValidator
 from reviews.models import Category, Comment, Genre, Review, Title
 
+
 User = get_user_model()
 
 
@@ -18,7 +19,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Genre
         fields = ('name', 'slug')
@@ -29,8 +29,15 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    category = SlugRelatedField(slug_field='slug', read_only=True)
-    genre = GenreSerializer(many=True)
+    category = SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all(),
+    )
+    genre = SlugRelatedField(
+        many=True,
+        queryset=Genre.objects.all(),
+        slug_field='slug'
+    )
 
     class Meta:
         fields = '__all__'
@@ -84,8 +91,24 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username',
-        #default=serializers.CurrentUserDefault()
+        default=serializers.CurrentUserDefault()
     )
+
+    def validate(self, data):
+        if self.context.get('request').method != 'POST':
+            return data
+
+        reviewer = self.context.get('request').user
+
+        title_id = self.context.get('view').kwargs.get('title_id')
+
+        title = Title.objects.get(pk=title_id)
+
+        if Review.objects.filter(author=reviewer, title=title).exists():
+            raise serializers.ValidationError(
+                'Нельзя добавить второй отзыв на то же самое произведение'
+            )
+        return data
 
     class Meta:
         model = Review
@@ -96,7 +119,7 @@ class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username',
-        #default=serializers.CurrentUserDefault()
+        default=serializers.CurrentUserDefault()
     )
 
     class Meta:
