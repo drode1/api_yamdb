@@ -154,11 +154,11 @@ class CommentViewSet(viewsets.ModelViewSet):
         return review.comments.all()
 
     def perform_create(self, serializer):
-        review2 = get_object_or_404(
+        review = get_object_or_404(
             Review,
             pk=self.kwargs.get('review_id')
         )
-        serializer.save(author=self.request.user, review=review2)
+        serializer.save(author=self.request.user, review=review)
 
     def perform_update(self, serializer):
         if serializer.instance.author != self.request.user:
