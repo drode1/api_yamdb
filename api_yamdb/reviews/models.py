@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from users.models import User
 
@@ -23,6 +24,10 @@ class Review(models.Model):
         verbose_name='Автор',
     )
     score = models.IntegerField(
+        validators=[
+            MaxValueValidator(10),
+            MinValueValidator(1)
+        ],
         verbose_name='Оценка от 1 до 10'
     )
     pub_date = models.DateTimeField(
