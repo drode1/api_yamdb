@@ -1,19 +1,64 @@
 import random
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, filters, permissions, status
-from rest_framework.decorators import action
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.generics import CreateAPIView
+from rest_framework.permissions import (IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api.serializers import (UserSerializer, UserRegisterSerializer,
-                             ObtainUserTokenSerializer, SelfUserSerializer)
-from .permissions import IsCustomAdminUser, IsUserOrAdmin
+from reviews.models import Category, Genre, Review, Title
+from .filters import TitleFilter
+from .permissions import IsAdminOrReadOnly, IsCustomAdminUser
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ObtainUserTokenSerializer,
+                          ReviewSerializer, ReadTitleSerializer,
+                          CreateTitleSerializer,
+                          UserRegisterSerializer, UserSerializer)
 
 User = get_user_model()
+
+
+class CreateListDestroyViewSet(mixins.CreateModelMixin,
+                               mixins.ListModelMixin,
+                               mixins.DestroyModelMixin,
+                               viewsets.GenericViewSet):
+    pass
+
+
+class CategoryViewSet(CreateListDestroyViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class GenreViewSet(CreateListDestroyViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ReadTitleSerializer
+        else:
+            return CreateTitleSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -26,20 +71,6 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_value_regex = '[\w.@+-]{1,150}'
     search_fields = ('username',)
     queryset = User.objects.all()
-
-    @action(detail=False, url_path='me', url_name='me',
-            methods=('GET', 'PATCH'), permission_classes=[IsUserOrAdmin])
-    def get_me(self, request, *args, **kwargs):
-        """ Метод для обработки запросов к /me/"""
-
-        queryset = User.objects.get(username=request.user)
-        serializer = SelfUserSerializer(instance=queryset, data=request.data)
-        if serializer.is_valid():
-            # Если patch, то сохраняем данные пользователя
-            if request.method == 'PATCH':
-                serializer.save(**serializer.validated_data)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RegisterUser(CreateAPIView):
@@ -81,7 +112,60 @@ class ObtainUserToken(CreateAPIView):
             # и сгенерированный автоматически совпадает
             if user.confirmation_code == code:
                 token = RefreshToken.for_user(user)
-                return Response({'access': str(token.access_token)})
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+                return Response({'access': token.access_token})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, title=title)
+
+    def perform_update(self, serializer):
+        if serializer.instance.author != self.request.user:
+            raise PermissionDenied('Изменить не свой отзыв нельзя')
+        super(ReviewViewSet, self).perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        if not (instance.author == self.request.user
+                or self.request.user.role == 'moderator'):
+            raise PermissionDenied('Удалить чужой отзыв нельзя')
+        super(ReviewViewSet, self).perform_destroy(instance)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        review = get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id'),
+            title__pk=self.kwargs.get('title_id')
+        )
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        review = get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id')
+        )
+        serializer.save(author=self.request.user, review=review)
+
+    def perform_update(self, serializer):
+        if serializer.instance.author != self.request.user:
+            raise PermissionDenied('Изменить не свой отзыв нельзя')
+        super(CommentViewSet, self).perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        if not (instance.author == self.request.user
+                or self.request.user.role == 'moderator'):
+            raise PermissionDenied('Удалить чужой отзыв нельзя')
+        super(CommentViewSet, self).perform_destroy(instance)

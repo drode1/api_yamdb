@@ -1,8 +1,66 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueValidator
+from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('name', 'slug')
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}
+        }
+
+
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genre
+        fields = ('name', 'slug')
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}
+        }
+
+
+class CreateTitleSerializer(serializers.ModelSerializer):
+    category = SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all(),
+    )
+    genre = SlugRelatedField(
+        many=True,
+        queryset=Genre.objects.all(),
+        slug_field='slug'
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Title
+
+
+class ReadTitleSerializer(serializers.ModelSerializer):
+    category = CategorySerializer()
+    genre = GenreSerializer(many=True)
+    rating = serializers.SerializerMethodField()
+
+    class Meta:
+        fields = '__all__'
+        model = Title
+
+    def get_rating(self, obj):
+        scores_for_title = (
+            title.score for title
+            in Review.objects.filter(title_id=obj.id)
+        )
+        if scores_for_title:
+            return (sum(scores_for_title)
+                    / Review.objects.filter(title_id=obj.id).count())
+        return None
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -59,3 +117,39 @@ class ObtainUserTokenSerializer(serializers.Serializer):
 
     username = serializers.CharField(max_length=150)
     confirmation_code = serializers.IntegerField()
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault()
+    )
+
+    def validate(self, data):
+        if self.context.get('request').method != 'POST':
+            return data
+        reviewer = self.context.get('request').user
+        title_id = self.context.get('view').kwargs.get('title_id')
+        title = Title.objects.get(pk=title_id)
+        if Review.objects.filter(author=reviewer, title=title).exists():
+            raise serializers.ValidationError(
+                'Нельзя добавить второй отзыв на то же самое произведение'
+            )
+        return data
+
+    class Meta:
+        model = Review
+        fields = ('id', 'text', 'author', 'score', 'pub_date',)
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username',
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'text', 'author', 'pub_date')
