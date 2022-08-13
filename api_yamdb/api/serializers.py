@@ -52,15 +52,15 @@ class ReadTitleSerializer(serializers.ModelSerializer):
         fields = '__all__'
         model = Title
 
-    def get_rating(self, obj):
+    @staticmethod
+    def get_rating(obj):
+        reviews = Review.objects.filter(title_id=obj.id)
         scores_for_title = (
             title.score for title
-            in Review.objects.filter(title_id=obj.id)
+            in reviews
         )
-        if scores_for_title:
-            return (sum(scores_for_title)
-                    / Review.objects.filter(title_id=obj.id).count())
-        return None
+        if reviews:
+            return sum(scores_for_title) / reviews.count()
 
 
 class UserSerializer(serializers.ModelSerializer):
