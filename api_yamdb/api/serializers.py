@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from rest_framework import serializers
+from rest_framework import serializers, relations
 from rest_framework.validators import UniqueValidator
 
 User = get_user_model()
@@ -14,6 +14,19 @@ class UserSerializer(serializers.ModelSerializer):
             queryset=User.objects.all(),
             message='Пользователь с такой почтой уже существует.')]
     )
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name', 'last_name', 'bio', 'role',
+        )
+
+
+class SelfUserSerializer(serializers.ModelSerializer):
+    """Сериализатор для работы с пользователем при запросе к /me/. """
+
+    username = serializers.ReadOnlyField()
+    role = serializers.ReadOnlyField()
 
     class Meta:
         model = User

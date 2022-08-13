@@ -4,13 +4,14 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, filters, permissions, status
+from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.serializers import (UserSerializer, UserRegisterSerializer,
-                             ObtainUserTokenSerializer)
-from permissions import IsCustomAdminUser
+                             ObtainUserTokenSerializer, SelfUserSerializer)
+from .permissions import IsCustomAdminUser, IsUserOrAdmin
 
 User = get_user_model()
 
@@ -25,6 +26,20 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_value_regex = '[\w.@+-]{1,150}'
     search_fields = ('username',)
     queryset = User.objects.all()
+
+    @action(detail=False, url_path='me', url_name='me',
+            methods=('GET', 'PATCH'), permission_classes=[IsUserOrAdmin])
+    def get_me(self, request, *args, **kwargs):
+        """ Метод для обработки запросов к /me/"""
+
+        queryset = User.objects.get(username=request.user)
+        serializer = SelfUserSerializer(instance=queryset, data=request.data)
+        if serializer.is_valid():
+            # Если patch, то сохраняем данные пользователя
+            if request.method == 'PATCH':
+                serializer.save(**serializer.validated_data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RegisterUser(CreateAPIView):
@@ -66,5 +81,7 @@ class ObtainUserToken(CreateAPIView):
             # и сгенерированный автоматически совпадает
             if user.confirmation_code == code:
                 token = RefreshToken.for_user(user)
-                return Response({'access': token.access_token})
+                return Response({'access': str(token.access_token)})
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

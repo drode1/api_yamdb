@@ -2,9 +2,9 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 USER_ROLES_CHOICES = (
-    ('user', 'user'),
-    ('moderator', 'moderator'),
-    ('admin', 'admin')
+    ('user', 'Пользователь'),
+    ('moderator', 'Модератор'),
+    ('admin', 'Администратор')
 )
 
 
@@ -15,8 +15,8 @@ class User(AbstractUser):
                             max_length=250, default='user')
     bio = models.TextField('Биография', null=True, blank=True)
 
-    confirmation_code = models.CharField('Код подтверждения', max_length=5,
-                                         blank=True, null=True)
+    confirmation_code = models.PositiveIntegerField('Код подтверждения',
+                                                    blank=True, null=True)
 
     class Meta:
         verbose_name = 'Пользователь'
