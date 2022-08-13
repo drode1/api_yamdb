@@ -8,19 +8,18 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView
-from rest_framework.permissions import (IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-
 from reviews.models import Category, Genre, Review, Title
+
 from .filters import TitleFilter
 from .permissions import IsAdminOrReadOnly, IsCustomAdminUser, IsUserOrAdmin
 from .serializers import (CategorySerializer, CommentSerializer,
-                          GenreSerializer, ObtainUserTokenSerializer,
-                          ReviewSerializer, ReadTitleSerializer,
-                          CreateTitleSerializer,
-                          UserRegisterSerializer, UserSerializer,
-                          SelfUserSerializer)
+                          CreateTitleSerializer, GenreSerializer,
+                          ObtainUserTokenSerializer, ReadTitleSerializer,
+                          ReviewSerializer, SelfUserSerializer,
+                          UserRegisterSerializer, UserSerializer)
 
 User = get_user_model()
 
