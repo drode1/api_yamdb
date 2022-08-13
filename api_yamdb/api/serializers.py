@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueValidator
@@ -131,7 +132,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             return data
         reviewer = self.context.get('request').user
         title_id = self.context.get('view').kwargs.get('title_id')
-        title = Title.objects.get(pk=title_id)
+        title = get_object_or_404(Title, pk=title_id)
         if Review.objects.filter(author=reviewer, title=title).exists():
             raise serializers.ValidationError(
                 'Нельзя добавить второй отзыв на то же самое произведение'
