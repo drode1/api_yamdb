@@ -15,6 +15,8 @@ class TitleAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
+    """ Класс для управления категориями произведений в админке. """
+
     list_display = ('pk', 'name', 'slug')
     search_fields = ('name',)
     empty_value_display = '-пусто-'
@@ -22,6 +24,8 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
+    """ Класс для управления жанрами произведений в админке. """
+
     list_display = ('pk', 'name', 'slug')
     search_fields = ('name',)
     empty_value_display = '-пусто-'
@@ -29,6 +33,8 @@ class GenreAdmin(admin.ModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
+    """ Класс для управления комментариями в админке. """
+
     list_display = ('pk', 'review', 'author')
     search_fields = ('author', 'text')
     empty_value_display = '-пусто-'
@@ -36,6 +42,8 @@ class CommentAdmin(admin.ModelAdmin):
 
 @admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
+    """ Класс для управления отзывами в админке. """
+
     list_display = ('pk', 'title', 'author', 'score')
     list_filter = ('title', 'author', 'score')
     search_fields = ('title', 'author')
