@@ -1,10 +1,9 @@
 import datetime
 
-from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-User = get_user_model()
+from users.models import User
 
 # Константа для проверки года
 YEAR_CHOICES = [(y, y) for y in range(datetime.date.today().year + 1)]
@@ -65,6 +64,7 @@ class Title(models.Model):
 
     def get_genres(self):
         """ Метод возвращает жанры произведения. """
+
         return ', '.join([obj for obj in self.genre.all()])
 
     def __str__(self):

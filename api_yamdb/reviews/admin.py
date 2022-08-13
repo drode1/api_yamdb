@@ -13,7 +13,30 @@ class TitleAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
-admin.site.register(Category)
-admin.site.register(Genre)
-admin.site.register(Review)
-admin.site.register(Comment)
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'name', 'slug')
+    search_fields = ('name',)
+    empty_value_display = '-пусто-'
+
+
+@admin.register(Genre)
+class GenreAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'name', 'slug')
+    search_fields = ('name',)
+    empty_value_display = '-пусто-'
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'review', 'author')
+    search_fields = ('author', 'text')
+    empty_value_display = '-пусто-'
+
+
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'title', 'author', 'score')
+    list_filter = ('title', 'author', 'score')
+    search_fields = ('title', 'author')
+    empty_value_display = '-пусто-'
