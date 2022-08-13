@@ -9,7 +9,6 @@
 ![python version](https://img.shields.io/badge/Python-3.7-green)
 ![django version](https://img.shields.io/badge/Django-2.2-green)
 ![djangorestframework version](https://img.shields.io/badge/DRF-3.12-green)
-![djoser version](https://img.shields.io/badge/djoser-2.1-green)
 ![simplejwt version](https://img.shields.io/badge/DRFsimplejwt-4.7-green)
 
 ### Как запустить проект:
@@ -17,17 +16,17 @@
 Клонировать репозиторий и перейти в него в командной строке:
 
 ```
-git clone https://github.com/Antonros/api_final_yatube.git
+git clone https://github.com/drode1/api_yamdb.git
 ```
 ```
-cd api_final_yatube
+cd api_yamdb
 ```
 Cоздать и активировать виртуальное окружение:
 ```
 python -m venv venv
 ```
 ```
-source venv/Scripts/activate
+. venv/bin/activate
 ```
 ```
 python -m pip install --upgrade pip
