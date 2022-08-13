@@ -8,7 +8,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -39,7 +38,6 @@ class CategoryViewSet(CreateListDestroyViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    pagination_class = LimitOffsetPagination
 
 
 class GenreViewSet(CreateListDestroyViewSet):
@@ -49,7 +47,6 @@ class GenreViewSet(CreateListDestroyViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
-    pagination_class = LimitOffsetPagination
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -57,7 +54,6 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
-    pagination_class = LimitOffsetPagination
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -73,7 +69,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     permission_classes = (permissions.IsAuthenticated, IsCustomAdminUser,)
     lookup_field = 'username'
-    lookup_value_regex = '[\\w.@+-]{1,150}'
+    lookup_value_regex = '[\w.@+-]{1,150}'
     search_fields = ('username',)
     queryset = User.objects.all()
 
@@ -138,7 +134,6 @@ class ObtainUserToken(CreateAPIView):
 class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = ReviewSerializer
-    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -163,7 +158,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = CommentSerializer
-    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         review = get_object_or_404(
