@@ -9,31 +9,32 @@ from users.models import User
 YEAR_CHOICES = [(y, y) for y in range(datetime.date.today().year + 1)]
 
 
-class BasicModel(models.Model):
-    """ Базовая 2
-    модель для категорий и жанров произведений. """
+class Category(models.Model):
+    """ Модель категорий для произведений. """
 
     name = models.CharField('Название', max_length=256)
     slug = models.SlugField('URL', unique=True, max_length=50)
-
-    def __str__(self):
-        return self.name
-
-
-class Category(BasicModel):
-    """ Модель категорий для произведений. """
 
     class Meta:
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
 
+    def __str__(self):
+        return self.name
 
-class Genre(BasicModel):
+
+class Genre(models.Model):
     """ Модель жанров для произведений. """
+
+    name = models.CharField('Название', max_length=256)
+    slug = models.SlugField('URL', unique=True, max_length=50)
 
     class Meta:
         verbose_name = "Жанр"
         verbose_name_plural = "Жанры"
+
+    def __str__(self):
+        return self.name
 
 
 class Title(models.Model):
