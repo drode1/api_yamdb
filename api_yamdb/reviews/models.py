@@ -2,33 +2,30 @@ import datetime
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
 from users.models import User
 
 YEAR_CHOICES = [(y, y) for y in range(datetime.date.today().year + 1)]
 
 
-class Category(models.Model):
+class BasicModel(models.Model):
     name = models.CharField('Название', max_length=256)
     slug = models.SlugField(unique=True, max_length=50)
 
+    def __str__(self):
+        return self.name
+
+
+class Category(BasicModel):
     class Meta:
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
 
-    def __str__(self):
-        return self.name
 
-
-class Genre(models.Model):
-    name = models.CharField('Название', max_length=100)
-    slug = models.SlugField(unique=True)
-
+class Genre(BasicModel):
     class Meta:
         verbose_name = "Жанр"
         verbose_name_plural = "Жанры"
-
-    def __str__(self):
-        return self.name
 
 
 class Title(models.Model):
