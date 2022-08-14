@@ -3,7 +3,8 @@ from csv import DictReader
 from django.core.management import BaseCommand
 
 # Импорт моделей
-from reviews.models import Category, Genre, User, Review, Comment, Title
+from reviews.models import (Category, Genre, User, Review, Comment, Title,
+                            GenreTitle)
 
 
 class Command(BaseCommand):
@@ -50,6 +51,13 @@ class Command(BaseCommand):
                             category=category
                         )
 
+    @staticmethod
+    def genre_title():
+        with open('static/data/genre_title.csv', encoding='utf-8') as f:
+            for row in DictReader(f):
+                if not GenreTitle.objects.filter(**row).exists():
+                    GenreTitle.objects.create(**row)
+
     def reviews_comments(self):
         """ Метод импортирует отзывы и комментарии произведения в БД. """
 
@@ -68,6 +76,9 @@ class Command(BaseCommand):
         """ Агрегирующий метод, который вызывается с помощью команды import
         и добавляет тестовые данные в БД. """
 
+        print('Начался импорт данных.')
         self.users_category_genre()
         self.titles()
         self.reviews_comments()
+        self.genre_title()
+        print('Начался данных завершен.')
