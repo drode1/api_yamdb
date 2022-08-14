@@ -7,7 +7,7 @@ from reviews.models import Category, Genre, User, Review, Comment, Title
 
 
 class Command(BaseCommand):
-    help = "Загрузка данных в БД из csv"
+    help = "Команда для загрузки тестовых данных в БД из csv файлов"
 
     # Список переменных для импорта данных в модели
     models = {
@@ -50,7 +50,7 @@ class Command(BaseCommand):
                             category=category
                         )
 
-    def reviews_comments_titles(self):
+    def reviews_comments(self):
         """ Метод импортирует отзывы и комментарии произведения в БД. """
 
         for model, file in self.models.get('review_comment'):
@@ -70,4 +70,4 @@ class Command(BaseCommand):
 
         self.users_category_genre()
         self.titles()
-        self.reviews_comments_titles()
+        self.reviews_comments()
