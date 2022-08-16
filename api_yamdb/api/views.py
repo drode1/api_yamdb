@@ -132,6 +132,8 @@ class ObtainUserToken(CreateAPIView):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """ Вью сет для взаимодействия с отзывами пользователей. """
+
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = ReviewSerializer
 
@@ -157,6 +159,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(ReviewViewSet):
+    """ Вью сет для взаимодействия с комментариями пользователей. """
+
     serializer_class = CommentSerializer
 
     def get_review(self):
