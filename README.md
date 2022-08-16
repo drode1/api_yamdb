@@ -66,20 +66,6 @@ python manage.py runserver
 
 ### Примеры использования
 
-Придумайте новую пару «логин-пароль» и отправьте POST-запрос на .../api/v1/users/, передав их в полях username и password.
-
-Теперь можно получить токен: отправьте POST-запрос на эндпоинт .../api/v1/jwt/create/, передав действующий логин и пароль в полях username и password. 
-
-API вернёт JWT-токен:
-
-```
-{
-    "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTYyMDk0MTQ3NywianRpIjoiODUzYzE5MTg5NzMwNDQwNTk1ZjI3ZTBmOTAzZDcxZDEiLCJ1c2VyX2lkIjoxfQ.0vJBPIUZG4MjeU_Q-mhr5Gqjx7sFlO6AShlfeINK8nA",
-    "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjIwODU1Mzc3LCJqdGkiOiJkY2EwNmRiYTEzNWQ0ZjNiODdiZmQ3YzU2Y2ZjNGE0YiIsInVzZXJfaWQiOjF9.eZfkpeNVfKLzBY7U0h5gMdTwUnGP3LjRn5g8EIvWlVg"
-} 
-```
-Токен вернётся в поле access, а данные из поля refresh пригодятся для обновления токена. Этот токен также надо будет передавать в заголовке каждого запроса, в поле Authorization. Перед самим токеном должно стоять ключевое слово Bearer и пробел.
-
 Пример POST-запроса. Регистрация нового пользователя
 
 ```
@@ -90,6 +76,19 @@ Request samples
 {
   "email": "string",
   "username": "string"
+}
+```
+
+Пример POST-запроса. Получение JWT-токена.
+
+```
+POST /api/v1/auth/token/
+
+Request samples
+
+{
+  "username": "string",
+  "confirmation_code": "string"
 }
 ```
 
