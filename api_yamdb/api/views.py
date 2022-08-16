@@ -8,6 +8,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import CreateAPIView
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -38,6 +39,7 @@ class CategoryViewSet(CreateListDestroyViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
+    pagination_class = LimitOffsetPagination
 
 
 class GenreViewSet(CreateListDestroyViewSet):
@@ -47,6 +49,7 @@ class GenreViewSet(CreateListDestroyViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
+    pagination_class = LimitOffsetPagination
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -54,6 +57,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = TitleFilter
+    pagination_class = LimitOffsetPagination
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -134,15 +138,15 @@ class ObtainUserToken(CreateAPIView):
 class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = ReviewSerializer
-
-    def get_title(self):
-        return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
-        return self.get_title().reviews.all()
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        return title.reviews.all()
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user, title=self.get_title())
+        title = get_object_or_404(Title, pk=self.kwargs.get('title_id'))
+        serializer.save(author=self.request.user, title=title)
 
     def perform_update(self, serializer):
         if serializer.instance.author != self.request.user:
@@ -156,18 +160,33 @@ class ReviewViewSet(viewsets.ModelViewSet):
         super(ReviewViewSet, self).perform_destroy(instance)
 
 
-class CommentViewSet(ReviewViewSet):
+class CommentViewSet(viewsets.ModelViewSet):
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = CommentSerializer
+    pagination_class = LimitOffsetPagination
 
-    def get_review(self):
-        return get_object_or_404(
+    def get_queryset(self):
+        review = get_object_or_404(
             Review,
             pk=self.kwargs.get('review_id'),
             title__pk=self.kwargs.get('title_id')
         )
-
-    def get_queryset(self):
-        return self.get_review().comments.all()
+        return review.comments.all()
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user, review=self.get_review())
+        review = get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id')
+        )
+        serializer.save(author=self.request.user, review=review)
+
+    def perform_update(self, serializer):
+        if serializer.instance.author != self.request.user:
+            raise PermissionDenied('Изменить не свой отзыв нельзя')
+        super(CommentViewSet, self).perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        if not (instance.author == self.request.user
+                or self.request.user.role == 'moderator'):
+            raise PermissionDenied('Удалить чужой отзыв нельзя')
+        super(CommentViewSet, self).perform_destroy(instance)
