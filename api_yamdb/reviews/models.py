@@ -2,14 +2,18 @@ import datetime
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
 from users.models import User
 
+# Константа для проверки года
 YEAR_CHOICES = [(y, y) for y in range(datetime.date.today().year + 1)]
 
 
 class Category(models.Model):
+    """ Модель категорий для произведений. """
+
     name = models.CharField('Название', max_length=256)
-    slug = models.SlugField(unique=True, max_length=50)
+    slug = models.SlugField('URL', unique=True, max_length=50)
 
     class Meta:
         verbose_name = "Категория"
@@ -20,8 +24,10 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
-    name = models.CharField('Название', max_length=100)
-    slug = models.SlugField(unique=True)
+    """ Модель жанров для произведений. """
+
+    name = models.CharField('Название', max_length=256)
+    slug = models.SlugField('URL', unique=True, max_length=50)
 
     class Meta:
         verbose_name = "Жанр"
@@ -32,9 +38,11 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
+    """ Модель произведений. """
+
     name = models.CharField('Название', max_length=100)
     year = models.IntegerField('Год выпуска', choices=YEAR_CHOICES)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField('Описание', blank=True, null=True)
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -55,6 +63,8 @@ class Title(models.Model):
         verbose_name_plural = "Произведения"
 
     def get_genres(self):
+        """ Метод возвращает жанры произведения. """
+
         return ', '.join([obj for obj in self.genre.all()])
 
     def __str__(self):
@@ -62,6 +72,8 @@ class Title(models.Model):
 
 
 class GenreTitle(models.Model):
+    """ Связующая модель для жанров и произведений. """
+
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
 
@@ -70,6 +82,8 @@ class GenreTitle(models.Model):
 
 
 class Review(models.Model):
+    """ Модель отзывов пользователей к произведениям. """
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -78,6 +92,7 @@ class Review(models.Model):
     )
     text = models.TextField(
         verbose_name='Текст комментария',
+        help_text='Текст отзыва'
     )
     author = models.ForeignKey(
         User,
@@ -98,7 +113,7 @@ class Review(models.Model):
     )
 
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
@@ -113,6 +128,8 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
+    """ Модель комментариев пользователей к отзывам. """
+
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
@@ -135,7 +152,7 @@ class Comment(models.Model):
     )
 
     class Meta:
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
 

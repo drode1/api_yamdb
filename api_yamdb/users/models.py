@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+# Кортеж с ролями пользователя
 USER_ROLES_CHOICES = (
     ('user', 'Пользователь'),
     ('moderator', 'Модератор'),
