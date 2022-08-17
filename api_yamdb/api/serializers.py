@@ -114,6 +114,8 @@ class UserRegisterSerializer(serializers.Serializer):
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())])
 
+    role = serializers.ReadOnlyField()
+
     def validate(self, data):
         # Проверяем, что username не является me
         if data['username'] == 'me':
@@ -127,6 +129,7 @@ class ObtainUserTokenSerializer(serializers.Serializer):
 
     username = serializers.CharField(max_length=150)
     confirmation_code = serializers.IntegerField()
+    role = serializers.ReadOnlyField()
 
 
 class ReviewSerializer(serializers.ModelSerializer):
