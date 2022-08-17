@@ -24,8 +24,6 @@ router_v1.register(
 # Создаем отдельный кортеж для api урлов 1 версии
 v1_urlpatterns = (
     [
-        path('auth/signup/', RegisterUser.as_view(), name='user-signup'),
-        path('auth/token/', ObtainUserToken.as_view(), name='user-token'),
         path('redoc/', TemplateView.as_view(template_name='redoc.html'),
              name='redoc'),
         path('', include(router_v1.urls)),
@@ -34,6 +32,17 @@ v1_urlpatterns = (
     'v1'
 )
 
+# Создаем отдельный кортеж для урлов регистрации и авторизации
+auth_patterns = (
+    [
+        path('auth/signup/', RegisterUser.as_view(), name='signup'),
+        path('auth/token/', ObtainUserToken.as_view(), name='token'),
+    ],
+    'auth'
+)
+
 urlpatterns = [
     path('v1/', include(v1_urlpatterns)),
+    path('v1/', include(auth_patterns)),
+
 ]
