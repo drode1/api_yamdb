@@ -134,7 +134,7 @@ class ObtainUserToken(CreateAPIView):
             # и сгенерированный автоматически совпадает
             if user.confirmation_code == code:
                 token = RefreshToken.for_user(user)
-                return Response({'access': token.access_token})
+                return Response({'access': str(token.access_token)})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
