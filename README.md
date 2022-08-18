@@ -74,8 +74,8 @@ POST /api/v1/auth/signup/
 Request samples
 
 {
-  "email": "string",
-  "username": "string"
+  "username": "string",
+  "email": "string"
 }
 ```
 
@@ -88,7 +88,7 @@ Request samples
 
 {
   "username": "string",
-  "confirmation_code": "string"
+  "confirmation_code": number
 }
 ```
 
