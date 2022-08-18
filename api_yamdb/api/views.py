@@ -1,6 +1,5 @@
 import random
 
-from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
@@ -11,27 +10,31 @@ from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from reviews.models import Category, Genre, Review, Title
 
+from reviews.models import Category, Genre, Review, Title
+from users.models import User
 from .filters import TitleFilter
 from .permissions import IsAdminOrReadOnly, IsCustomAdminUser, IsUserOrAdmin
 from .serializers import (CategorySerializer, CommentSerializer,
-                          CreateTitleSerializer, GenreSerializer,
-                          ObtainUserTokenSerializer, ReadTitleSerializer,
-                          ReviewSerializer, SelfUserSerializer,
-                          UserRegisterSerializer, UserSerializer)
-
-User = get_user_model()
+                          GenreSerializer, ObtainUserTokenSerializer,
+                          ReviewSerializer, UserRegisterSerializer,
+                          UserSerializer,
+                          SelfUserSerializer, ReadTitleSerializer,
+                          CreateTitleSerializer)
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
                                mixins.ListModelMixin,
                                mixins.DestroyModelMixin,
                                viewsets.GenericViewSet):
+    """ Создаем базовый вью сет. """
+
     pass
 
 
 class CategoryViewSet(CreateListDestroyViewSet):
+    """ Вью сет для взаимодействия с категориями. """
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -41,6 +44,8 @@ class CategoryViewSet(CreateListDestroyViewSet):
 
 
 class GenreViewSet(CreateListDestroyViewSet):
+    """ Вью сет для взаимодействия с жанрами. """
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
@@ -50,6 +55,8 @@ class GenreViewSet(CreateListDestroyViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """ Вью сет для взаимодействия с произведениями. """
+
     queryset = Title.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
@@ -95,7 +102,7 @@ class RegisterUser(CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = UserRegisterSerializer(data=request.data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             # Генерируем пятизначный код
             confirmation_code = random.randint(10000, 99999)
             User.objects.get_or_create(**serializer.validated_data,
@@ -127,7 +134,7 @@ class ObtainUserToken(CreateAPIView):
             # и сгенерированный автоматически совпадает
             if user.confirmation_code == code:
                 token = RefreshToken.for_user(user)
-                return Response({'access': token.access_token})
+                return Response({'access': str(token.access_token)})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

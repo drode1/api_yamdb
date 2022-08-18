@@ -1,6 +1,7 @@
 import datetime
 
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import RegexValidator
 from django.db import models
 
 from users.models import User
@@ -9,32 +10,35 @@ from users.models import User
 YEAR_CHOICES = [(y, y) for y in range(datetime.date.today().year + 1)]
 
 
-class Category(models.Model):
-    """ Модель категорий для произведений. """
+class BaseModel(models.Model):
+    """ Общая модель для категорий и жанров произведений. """
 
     name = models.CharField('Название', max_length=256)
-    slug = models.SlugField('URL', unique=True, max_length=50)
+    slug = models.SlugField('URL', unique=True, max_length=50,
+                            validators=[
+                                RegexValidator(regex='[-a-zA-Z0-9_]+')])
+
+    class Meta:
+        abstract = True
+
+    def __str__(self):
+        return self.name
+
+
+class Category(BaseModel):
+    """ Модель категорий для произведений. """
 
     class Meta:
         verbose_name = "Категория"
         verbose_name_plural = "Категории"
 
-    def __str__(self):
-        return self.name
 
-
-class Genre(models.Model):
+class Genre(BaseModel):
     """ Модель жанров для произведений. """
-
-    name = models.CharField('Название', max_length=256)
-    slug = models.SlugField('URL', unique=True, max_length=50)
 
     class Meta:
         verbose_name = "Жанр"
         verbose_name_plural = "Жанры"
-
-    def __str__(self):
-        return self.name
 
 
 class Title(models.Model):
