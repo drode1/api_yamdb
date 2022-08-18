@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 # Кортеж с ролями пользователя
@@ -16,8 +17,9 @@ class User(AbstractUser):
                             max_length=250, default='user')
     bio = models.TextField('Биография', null=True, blank=True)
 
-    confirmation_code = models.PositiveIntegerField('Код подтверждения',
-                                                    blank=True, null=True)
+    confirmation_code = models.PositiveIntegerField(
+        'Код подтверждения', blank=True, null=True,
+        validators=(MinValueValidator(10000), MaxValueValidator(99999)))
 
     class Meta:
         verbose_name = 'Пользователь'
