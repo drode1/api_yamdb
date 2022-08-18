@@ -17,10 +17,10 @@ from .filters import TitleFilter
 from .permissions import IsAdminOrReadOnly, IsCustomAdminUser, IsUserOrAdmin
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ObtainUserTokenSerializer,
-                          ReviewSerializer, ReadTitleSerializer,
-                          CreateTitleSerializer,
-                          UserRegisterSerializer, UserSerializer,
-                          SelfUserSerializer)
+                          ReviewSerializer, UserRegisterSerializer,
+                          UserSerializer,
+                          SelfUserSerializer, ReadTitleSerializer,
+                          CreateTitleSerializer)
 
 
 class CreateListDestroyViewSet(mixins.CreateModelMixin,
@@ -102,7 +102,7 @@ class RegisterUser(CreateAPIView):
 
     def post(self, request, *args, **kwargs):
         serializer = UserRegisterSerializer(data=request.data)
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             # Генерируем пятизначный код
             confirmation_code = random.randint(10000, 99999)
             User.objects.get_or_create(**serializer.validated_data,

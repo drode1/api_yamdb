@@ -45,8 +45,8 @@ class CreateTitleSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = '__all__'
         model = Title
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
 
 
 class ReadTitleSerializer(serializers.ModelSerializer):
@@ -54,11 +54,12 @@ class ReadTitleSerializer(serializers.ModelSerializer):
 
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField(method_name='get_rating')
 
     class Meta:
-        fields = '__all__'
         model = Title
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
+                  'category')
 
     @staticmethod
     def get_rating(obj):
@@ -103,18 +104,16 @@ class SelfUserSerializer(serializers.ModelSerializer):
         )
 
 
-class UserRegisterSerializer(serializers.Serializer):
+class UserRegisterSerializer(serializers.ModelSerializer):
     """ Сериализатор для проверки данных пользователей при самостоятельной
     регистрации через токен. """
-
-    username = serializers.CharField(
-        max_length=150,
-        validators=[UniqueValidator(queryset=User.objects.all())])
 
     email = serializers.EmailField(
         validators=[UniqueValidator(queryset=User.objects.all())])
 
-    role = serializers.ReadOnlyField()
+    class Meta:
+        model = User
+        fields = ('username', 'email')
 
     def validate(self, data):
         # Проверяем, что username не является me
@@ -123,13 +122,13 @@ class UserRegisterSerializer(serializers.Serializer):
         return data
 
 
-class ObtainUserTokenSerializer(serializers.Serializer):
+class ObtainUserTokenSerializer(serializers.ModelSerializer):
     """ Сериализатор для получения токена, когда пользователь уже
     зарегистрирован. """
 
-    username = serializers.CharField(max_length=150)
-    confirmation_code = serializers.IntegerField()
-    role = serializers.ReadOnlyField()
+    class Meta:
+        model = User
+        fields = ('username', 'confirmation_code')
 
 
 class ReviewSerializer(serializers.ModelSerializer):
